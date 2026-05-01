@@ -52,19 +52,32 @@ def get_plot(column_str: str, plot_type: str = "bar") -> str:
     pass
 
 async def build_groq_tools():
-    """Extract JSON schemas from FastMCP to pass natively to Groq."""
-    tools = await mcp.list_tools()
-    groq_tools = []
-    for t in tools:
-        groq_tools.append({
+    """Return hardcoded JSON schemas for Groq to prevent tool_use_failed errors."""
+    return [
+        {
             "type": "function",
             "function": {
-                "name": t.name,
-                "description": t.description or "",
-                "parameters": t.parameters
+                "name": "get_summary",
+                "description": "Generate a full statistical summary of the dataset.",
+                "parameters": {"type": "object", "properties": {}}
             }
-        })
-    return groq_tools
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_plot",
+                "description": "Generate a plot.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "column_str": {"type": "string", "description": "The column(s) like 'Category' or 'Category vs Sales'"},
+                        "plot_type": {"type": "string", "enum": ["bar", "pie", "line", "scatter"]}
+                    },
+                    "required": ["column_str"]
+                }
+            }
+        }
+    ]
 
 # --- Internal Tools Execution ---
 
@@ -184,6 +197,7 @@ async def chat(query: str = Form(...)):
     1. If the user asks for a general statistical summary, call the 'get_summary' tool.
     2. If the user asks for a graph or plot, call the 'get_plot' tool.
     3. For all other questions, analyze the data sample and answer directly. DO NOT call tools for simple math or filtering questions.
+    CRITICAL: When calling tools, you must output standard JSON tool calls. Do not use raw XML tags.
     """
     
     try:
@@ -224,6 +238,8 @@ async def chat(query: str = Form(...)):
         error_msg = str(e)
         if "429" in error_msg or "RateLimit" in error_msg:
             return {"response": "Groq API rate limit exceeded. Please wait a moment and try again."}
+        if "tool_use_failed" in error_msg or "failed_generation" in error_msg:
+            return {"response": "The AI attempted to generate a chart but formatted the request incorrectly. Please rephrase your request (e.g., 'Generate a bar chart for Product vs Quantity')."}
         return {"response": f"AI Engine Error: {error_msg}"}
 
 if __name__ == "__main__":

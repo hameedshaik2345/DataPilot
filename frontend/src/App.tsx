@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Upload, Send, Info, CheckCircle, BrainCircuit, Bot, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8000' : '';
 
 type Message = {
   role: 'user' | 'ai';
