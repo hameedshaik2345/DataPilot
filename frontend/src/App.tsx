@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
-import { Upload, Send, BarChart2, Info, CheckCircle, Table, BrainCircuit, Bot, Download } from 'lucide-react';
+import { Upload, Send, Info, CheckCircle, BrainCircuit, Bot, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const API_BASE = 'http://localhost:8000';
