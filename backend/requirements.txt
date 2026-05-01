@@ -2,8 +2,8 @@ fastapi
 uvicorn
 pandas
 matplotlib
-mcp
+fastmcp
+groq
 python-multipart
-google-generativeai
 python-dotenv
 seaborn
