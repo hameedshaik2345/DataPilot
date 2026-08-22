@@ -7,3 +7,7 @@ groq
 python-multipart
 python-dotenv
 seaborn
+motor
+passlib[bcrypt]
+pyjwt
+pydantic[email]
