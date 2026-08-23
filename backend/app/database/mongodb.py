@@ -8,9 +8,10 @@ class MongoDB:
 db_helper = MongoDB()
 
 async def connect_to_mongo():
-    db_helper.client = AsyncIOMotorClient(settings.MONGODB_URI)
-    db_helper.db = db_helper.client[settings.MONGODB_DATABASE_NAME]
-    print(f"Connected to MongoDB: {settings.MONGODB_DATABASE_NAME}")
+    if db_helper.client is None:
+        db_helper.client = AsyncIOMotorClient(settings.MONGODB_URI)
+        db_helper.db = db_helper.client[settings.MONGODB_DATABASE_NAME]
+        print(f"Connected to MongoDB: {settings.MONGODB_DATABASE_NAME}")
 
 async def close_mongo_connection():
     if db_helper.client is not None:
@@ -18,4 +19,7 @@ async def close_mongo_connection():
         print("MongoDB connection closed")
 
 def get_db():
+    if db_helper.client is None:
+        db_helper.client = AsyncIOMotorClient(settings.MONGODB_URI)
+        db_helper.db = db_helper.client[settings.MONGODB_DATABASE_NAME]
     return db_helper.db
