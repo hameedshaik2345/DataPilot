@@ -8,6 +8,8 @@ python-multipart
 python-dotenv
 seaborn
 motor
-passlib[bcrypt]
+passlib
+bcrypt==4.0.1
 pyjwt
 pydantic[email]
+pydantic-settings
