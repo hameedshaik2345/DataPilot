@@ -44,7 +44,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         raise credentials_exception
         
     from app.database.mongodb import get_db
-    db = get_db()
+    db = await get_db()
     from bson import ObjectId
     user = await db.users.find_one({"_id": ObjectId(user_id)})
     if user is None:
