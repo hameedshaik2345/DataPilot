@@ -18,8 +18,8 @@ async def close_mongo_connection():
         db_helper.client.close()
         print("MongoDB connection closed")
 
-def get_db():
-    if db_helper.client is None:
+async def get_db():
+    if getattr(db_helper, "db", None) is None:
         db_helper.client = AsyncIOMotorClient(settings.MONGODB_URI)
         db_helper.db = db_helper.client[settings.MONGODB_DATABASE_NAME]
     return db_helper.db
