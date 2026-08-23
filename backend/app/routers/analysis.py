@@ -6,9 +6,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from fastapi import APIRouter, Depends, HTTPException
-from motor.motor_asyncio import AsyncIOMotorDatabase
+from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorGridFSBucket
 from bson import ObjectId
-from typing import List
+from typing import List, Optional
 from groq import Groq
 
 from app.database.mongodb import get_db
@@ -197,7 +197,11 @@ async def chat(
     if not dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
         
-    if not os.path.exists(dataset["storage_key"]):
+    fs = AsyncIOMotorGridFSBucket(db)
+    try:
+        stream = await fs.open_download_stream(ObjectId(dataset["storage_key"]))
+        contents = await stream.read()
+    except Exception:
         raise HTTPException(status_code=500, detail="Dataset file missing from storage")
         
     client = Groq(api_key=settings.GROQ_API_KEY) if settings.GROQ_API_KEY else None
@@ -232,7 +236,7 @@ async def chat(
     await db.analysis_messages.insert_one(user_msg.model_dump(by_alias=True, exclude={"id"}))
 
     # Read dataset
-    df = pd.read_csv(dataset["storage_key"])
+    df = pd.read_csv(io.BytesIO(contents))
     data_sample = df.head(50).to_csv(index=False)
     groq_tools = await build_groq_tools()
 

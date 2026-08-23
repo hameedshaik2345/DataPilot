@@ -9,7 +9,7 @@ from app.database.mongodb import get_db
 from app.core.security import get_current_user
 from app.models.dataset import Dataset
 from app.schemas.dataset import DatasetResponse, DatasetRename
-from app.services.storage_service import storage_service
+from motor.motor_asyncio import AsyncIOMotorGridFSBucket
 
 router = APIRouter(prefix="/api/datasets", tags=["datasets"])
 
@@ -37,7 +37,9 @@ async def upload_dataset(
         
         # Reset file pointer to save it
         await file.seek(0)
-        file_path = await storage_service.save_file(current_user["id"], file)
+        fs = AsyncIOMotorGridFSBucket(db)
+        file_id = await fs.upload_from_stream(file.filename, await file.read())
+        file_path = str(file_id)
         
         dataset = Dataset(
             user_id=current_user["id"],
@@ -128,7 +130,12 @@ async def delete_dataset(
     if not dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
         
-    storage_service.delete_file(dataset["storage_key"])
+    fs = AsyncIOMotorGridFSBucket(db)
+    try:
+        await fs.delete(ObjectId(dataset["storage_key"]))
+    except Exception:
+        pass
+    
     await db.datasets.delete_one({"_id": ObjectId(dataset_id)})
     
     return {"status": "success", "message": "Dataset deleted"}
